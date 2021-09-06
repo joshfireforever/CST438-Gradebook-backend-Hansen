@@ -1,5 +1,6 @@
 ## CST438 Software Engineering California State University Monterey Bay
 ## Grade book service project
+## Sean Wilson
 ### Instructors can enter grades for an assignment
 
 ### REST apis  used by front end 
