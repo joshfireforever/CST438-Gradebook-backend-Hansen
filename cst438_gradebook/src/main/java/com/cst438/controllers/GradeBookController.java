@@ -1,5 +1,6 @@
 package com.cst438.controllers;
 
+import java.sql.Date;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -7,11 +8,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -150,6 +153,74 @@ public class GradeBookController {
 			assignmentGradeRepository.save(ag);
 		}
 		
+	}
+	
+	//change an assignment's name
+	@PutMapping("/gradebook/{id}/{newName}")
+	@Transactional
+	public void updateAssignmentName (@PathVariable("id") Integer assignmentId, @PathVariable("newName") String newName ) {
+		
+		String email = "dwisneski@csumb.edu";  // user name (should be instructor's email) 
+		Assignment assignment = checkAssignment(assignmentId, email);  // check that user name matches instructor email of the course.
+		
+		assignment.setName(newName);
+		assignmentRepository.save(assignment);
+		
+		
+	}
+	
+	// delete an assignment
+	@DeleteMapping("/gradebook/{id}")
+	@Transactional
+	public void deleteAssignment(  @PathVariable("id") Integer assignmentId  ) {
+		
+		String email = "dwisneski@csumb.edu";   // instructor's email 
+		
+		Assignment assignment = checkAssignment(assignmentId, email);
+		
+		//reject deletion if assignment is graded
+		if (assignment.getNeedsGrading() == 1) {
+			throw  new ResponseStatusException( HttpStatus.BAD_REQUEST, "Assignments with existing grades cannot be deleted.");
+		}
+		
+		// get the enrollment for the course
+		//  for each student, if an (empty) grade file exists, such as those created by get gradebook/{id}, delete it
+		GradebookDTO gradebook = new GradebookDTO();
+		gradebook.assignmentId= assignmentId;
+		gradebook.assignmentName = assignment.getName();
+		for (Enrollment e : assignment.getCourse().getEnrollments()) {
+			GradebookDTO.Grade grade = new GradebookDTO.Grade();
+			grade.name = e.getStudentName();
+			grade.email = e.getStudentEmail();
+			// does student have a grade for this assignment
+			AssignmentGrade ag = assignmentGradeRepository.findByAssignmentIdAndStudentEmail(assignmentId,  grade.email);
+			if (ag != null) {
+				assignmentGradeRepository.delete(ag);
+			}
+		}
+		// finally delete the assignment
+		assignmentRepository.delete(assignment);
+	}
+	
+	// create an assignment
+	@PostMapping("/gradebook")
+	@Transactional
+	public Integer addAssignment(@RequestParam("courseId") Integer courseId, @RequestParam("name") String name, @RequestParam("due") String due) { 
+		
+			String email = "dwisneski@csumb.edu";   // instructor's email 
+		
+			Course course  = courseRepository.findByCourse_id(courseId);
+	
+			
+			Assignment assignment = new Assignment();
+			assignment.setCourse(course);
+			assignment.setDueDate(Date.valueOf(due));
+			assignment.setName(name);
+			
+			assignmentRepository.save(assignment);
+			checkAssignment(assignment.getId(), email);
+			
+			return assignment.getId();
 	}
 	
 	private Assignment checkAssignment(int assignmentId, String email) {
