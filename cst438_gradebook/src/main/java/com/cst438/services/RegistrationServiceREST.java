@@ -19,6 +19,7 @@ public class RegistrationServiceREST extends RegistrationService {
 		System.out.println("REST registration service ");
 	}
 	
+	//use to send the grades to the registration app
 	@Override
 	public void sendFinalGrades(int course_id , CourseDTOG courseDTO) { 
 		
@@ -27,7 +28,7 @@ public class RegistrationServiceREST extends RegistrationService {
 		restTemplate.put(
 				"http://localhost:8080/course/" + course_id,   // URL
 				courseDTO,                              // data to send
-				CourseDTOG.class);                 // return data type
+				CourseDTOG.class);
 		
 		
 	}
