@@ -123,7 +123,6 @@ public class GradeBookController {
 			cdto.grades.add(gdto);
 			System.out.println("Course="+course_id+" Student="+e.getStudentEmail()+" grade="+gdto.grade);
 		}
-		
 		registrationService.sendFinalGrades(course_id, cdto);
 	}
 	
@@ -205,7 +204,7 @@ public class GradeBookController {
 	// create an assignment
 	@PostMapping("/gradebook")
 	@Transactional
-	public Integer addAssignment(@RequestParam("courseId") Integer courseId, @RequestParam("name") String name, @RequestParam("due") String due) { 
+	public Assignment addAssignment(@RequestParam("courseId") Integer courseId, @RequestParam("name") String name, @RequestParam("due") String due) { 
 		
 			String email = "dwisneski@csumb.edu";   // instructor's email 
 		
@@ -220,7 +219,7 @@ public class GradeBookController {
 			assignmentRepository.save(assignment);
 			checkAssignment(assignment.getId(), email);
 			
-			return assignment.getId();
+			return assignment;
 	}
 	
 	private Assignment checkAssignment(int assignmentId, String email) {
