@@ -40,19 +40,31 @@ public class RegistrationServiceMQ extends RegistrationService {
 
 	// receiver of messages from Registration service
 	
+	//obtain enrollment information from the registration app
 	@RabbitListener(queues = "gradebook-queue")
 	@Transactional
 	public void receive(EnrollmentDTO enrollmentDTO) {
 		
-		//TODO  complete this method in homework 4
+		//add a new enrollment
+		Course course  = courseRepository.findByCourse_id(enrollmentDTO.course_id);
+		Enrollment enrollment = new Enrollment();
+		
+		enrollment.setCourse(course);
+		enrollment.setStudentEmail(enrollmentDTO.studentEmail);
+		enrollment.setStudentName(enrollmentDTO.studentName);
+		
+		enrollmentRepository.save(enrollment);
 		
 	}
 
-	// sender of messages to Registration Service
+	// sends messages to Registration Service
 	@Override
 	public void sendFinalGrades(int course_id, CourseDTOG courseDTO) {
-		 
-		//TODO  complete this method in homework 4
+		
+		//put the course id in the DTO first to send them together
+		courseDTO.course_id = course_id;
+		this.rabbitTemplate.convertAndSend(registrationQueue.getName(), courseDTO);
+        System.out.println("Sent grades: " + courseDTO);
 		
 	}
 
